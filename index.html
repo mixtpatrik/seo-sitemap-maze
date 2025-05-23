@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sitemap Maze Game</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background: #eef2f7;
+      color: #333;
+    }
+    header {
+      background: #3f51b5;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.5rem;
+    }
+    .container {
+      max-width: 960px;
+      margin: 2rem auto;
+      padding: 1rem;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .game-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .game-container {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .url-list, .sitemap {
+      padding: 1rem;
+      border: 2px dashed #ccc;
+      border-radius: 8px;
+      min-width: 250px;
+      background: #fafafa;
+    }
+    .url-item {
+      padding: 0.5rem;
+      background: #e3f2fd;
+      border: 1px solid #64b5f6;
+      margin-bottom: 0.5rem;
+      border-radius: 4px;
+      cursor: grab;
+    }
+    .drop-zone {
+      min-height: 50px;
+      margin-top: 0.5rem;
+      padding: 0.5rem;
+      border: 2px dashed #9e9e9e;
+      border-radius: 4px;
+      background: #fff;
+    }
+    .correct {
+      background: #c8e6c9 !important;
+    }
+    .incorrect {
+      background: #ffcdd2 !important;
+    }
+    .btn {
+      display: block;
+      margin: 1.5rem auto;
+      padding: 0.75rem 2rem;
+      font-size: 1rem;
+      background: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .timer {
+      font-weight: bold;
+      color: #d32f2f;
+    }
+  </style>
+</head>
+<body>
+  <header>Sitemap Maze Game</header>
+  <div class="container">
+    <div class="game-info">
+      <div>Level: <span id="level">1</span>/5</div>
+      <div class="timer">Time Left: <span id="time">60</span>s</div>
+    </div>
+    <p>Drag the URLs into the correct sitemap hierarchy:</p>
+    <div class="game-container">
+      <div class="url-list" id="urlList"></div>
+      <div class="sitemap" id="sitemap"></div>
+    </div>
+    <button class="btn" onclick="checkAnswers()">Check Answers</button>
+  </div>
+
+  <script>
+    const levels = [
+      [
+        { url: '/', label: 'Home' },
+        { url: '/about', label: 'About' },
+        { url: '/products', label: 'Products' },
+        { url: '/products/shoes', label: 'Shoes' },
+        { url: '/contact', label: 'Contact' }
+      ],
+      [
+        { url: '/', label: 'Homepage' },
+        { url: '/blog', label: 'Blog' },
+        { url: '/blog/seo-tips', label: 'SEO Tips' },
+        { url: '/services', label: 'Services' },
+        { url: '/privacy-policy', label: 'Privacy Policy' }
+      ],
+      [
+        { url: '/', label: 'Start' },
+        { url: '/portfolio', label: 'Portfolio' },
+        { url: '/portfolio/web', label: 'Web Projects' },
+        { url: '/portfolio/seo', label: 'SEO Projects' },
+        { url: '/terms', label: 'Terms' }
+      ],
+      [
+        { url: '/', label: 'Main' },
+        { url: '/features', label: 'Features' },
+        { url: '/features/security', label: 'Security' },
+        { url: '/support', label: 'Support' },
+        { url: '/login', label: 'Login' }
+      ],
+      [
+        { url: '/', label: 'Dashboard' },
+        { url: '/settings', label: 'Settings' },
+        { url: '/settings/profile', label: 'Profile' },
+        { url: '/settings/security', label: 'Security Settings' },
+        { url: '/logout', label: 'Logout' }
+      ]
+    ];
+
+    let currentLevel = 0;
+    let timerInterval;
+    let timeLeft = 60;
+
+    function shuffle(array) {
+      return array.sort(() => Math.random() - 0.5);
+    }
+
+    function startLevel() {
+      document.getElementById('level').innerText = currentLevel + 1;
+      const urls = shuffle([...levels[currentLevel]]);
+      const urlList = document.getElementById('urlList');
+      const sitemap = document.getElementById('sitemap');
+
+      urlList.innerHTML = '';
+      sitemap.innerHTML = '';
+
+      urls.forEach(u => {
+        const item = document.createElement('div');
+        item.className = 'url-item';
+        item.draggable = true;
+        item.dataset.url = u.url;
+        item.innerText = u.url;
+        item.addEventListener('dragstart', e => {
+          e.dataTransfer.setData('text/plain', item.dataset.url);
+        });
+        urlList.appendChild(item);
+      });
+
+      levels[currentLevel].forEach(u => {
+        const zone = document.createElement('div');
+        zone.className = 'drop-zone';
+        zone.dataset.correct = u.url;
+        zone.innerText = u.label;
+
+        zone.addEventListener('dragover', e => {
+          e.preventDefault();
+          zone.style.background = '#f1f8e9';
+        });
+        zone.addEventListener('dragleave', () => {
+          zone.style.background = '';
+        });
+        zone.addEventListener('drop', e => {
+          e.preventDefault();
+          const url = e.dataTransfer.getData('text/plain');
+          zone.innerText = `${u.label}\n${url}`;
+          zone.dataset.answer = url;
+          zone.style.background = '';
+        });
+
+        sitemap.appendChild(zone);
+      });
+
+      resetTimer();
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      timeLeft = 60;
+      document.getElementById('time').innerText = timeLeft;
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        document.getElementById('time').innerText = timeLeft;
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          checkAnswers();
+        }
+      }, 1000);
+    }
+
+    function checkAnswers() {
+      clearInterval(timerInterval);
+      const zones = document.querySelectorAll('.drop-zone');
+      let allCorrect = true;
+
+      zones.forEach(zone => {
+        const correct = zone.dataset.correct;
+        const answer = zone.dataset.answer || '';
+        if (correct === answer) {
+          zone.classList.add('correct');
+          zone.classList.remove('incorrect');
+        } else {
+          zone.classList.add('incorrect');
+          zone.classList.remove('correct');
+          allCorrect = false;
+        }
+      });
+
+      if (allCorrect && currentLevel < levels.length - 1) {
+        alert('Great job! Moving to next level.');
+        currentLevel++;
+        startLevel();
+      } else if (allCorrect) {
+        alert('🎉 Congratulations! You completed all levels.');
+      } else {
+        alert('Some answers were incorrect. Try again!');
+      }
+    }
+
+    startLevel();
+  </script>
+</body>
+</html>
