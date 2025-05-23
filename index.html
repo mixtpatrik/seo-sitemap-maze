@@ -5,35 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sitemap Maze Game</title>
   <style>
-    :root {
-      --primary-color: #6C63FF;
-      --accent-color: #00C9A7;
-      --bg-color: #F4F7FF;
-      --text-color: #333;
-      --correct-color: #DFF5E1;
-      --incorrect-color: #FFD6D6;
-    }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
-      background: var(--bg-color);
-      color: var(--text-color);
-      overflow-x: hidden;
+      background: linear-gradient(to right, #e0f7fa, #e3f2fd);
+      color: #333;
     }
     header {
-      background: var(--primary-color);
+      background: #6200ea;
       color: white;
-      padding: 1rem;
+      padding: 1.5rem;
       text-align: center;
-      font-size: 1.75rem;
+      font-size: 2rem;
     }
     .container {
       max-width: 960px;
       margin: 2rem auto;
       padding: 2rem;
       background: white;
-      border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
     }
     .game-info {
       display: flex;
@@ -41,67 +32,61 @@
       align-items: center;
       margin-bottom: 1rem;
     }
-    .maze {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 2rem;
-    }
-    .url-list, .sitemap {
-      flex: 1;
-      min-width: 300px;
-      padding: 1rem;
-      border-radius: 12px;
-      background: #fff;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-    }
-    .url-item {
-      padding: 0.75rem 1rem;
-      background: var(--accent-color);
-      color: white;
-      border-radius: 6px;
-      margin-bottom: 0.5rem;
-      cursor: grab;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .url-item:hover {
-      transform: scale(1.05);
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    }
-    .drop-zone {
-      min-height: 60px;
-      padding: 1rem;
-      border-radius: 10px;
-      background: #f0f0f0;
-      transition: background 0.3s ease;
-      font-weight: 500;
-    }
-    .drop-zone:hover {
-      background: #e6e6ff;
-    }
-    .correct {
-      background: var(--correct-color) !important;
-    }
-    .incorrect {
-      background: var(--incorrect-color) !important;
-    }
-    .btn {
-      background: var(--primary-color);
-      color: white;
-      padding: 0.75rem 2rem;
-      border: none;
-      border-radius: 10px;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: background 0.3s;
-      margin: 2rem auto 0;
-      display: block;
-    }
-    .btn:hover {
-      background: #554dff;
-    }
     .timer {
       font-weight: bold;
-      color: #ff3b30;
+      color: #d50000;
+    }
+    .score {
+      font-weight: bold;
+      color: #2e7d32;
+    }
+    .url-bank, .drop-area {
+      padding: 1rem;
+      background: #f1f8e9;
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      min-height: 120px;
+      border: 2px dashed #cfd8dc;
+    }
+    .url-item {
+      padding: 0.5rem 1rem;
+      margin: 0.5rem;
+      background: #81d4fa;
+      color: #01579b;
+      border-radius: 6px;
+      display: inline-block;
+      cursor: grab;
+      user-select: none;
+      transition: transform 0.2s, background 0.3s;
+    }
+    .url-item:active {
+      transform: scale(1.05);
+    }
+    .drop-zone {
+      background: #ffffff;
+      min-height: 40px;
+      padding: 0.5rem;
+      border: 2px dashed #90a4ae;
+      margin: 0.5rem 0;
+      border-radius: 6px;
+      transition: background 0.3s ease;
+    }
+    .drop-zone.correct {
+      background: #c8e6c9;
+    }
+    .drop-zone.incorrect {
+      background: #ffcdd2;
+    }
+    .btn {
+      padding: 0.75rem 2rem;
+      background: #43a047;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      margin: 0 auto;
+      display: block;
     }
     .popup {
       position: fixed;
@@ -109,26 +94,20 @@
       left: 50%;
       transform: translate(-50%, -50%);
       background: white;
-      border: 2px solid var(--primary-color);
-      border-radius: 12px;
       padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+      z-index: 10;
       text-align: center;
-      z-index: 1000;
-      box-shadow: 0 0 30px rgba(0,0,0,0.2);
-      animation: fadeIn 0.4s ease;
     }
     .popup button {
       margin-top: 1rem;
-      background: var(--accent-color);
+      padding: 0.5rem 1rem;
+      background: #6200ea;
       color: white;
       border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 8px;
+      border-radius: 5px;
       cursor: pointer;
-    }
-    @keyframes fadeIn {
-      from {opacity: 0; transform: translate(-50%, -60%);}
-      to {opacity: 1; transform: translate(-50%, -50%);}
     }
   </style>
 </head>
@@ -137,31 +116,32 @@
   <div class="container">
     <div class="game-info">
       <div>Level: <span id="level">1</span>/4</div>
-      <div class="timer">Time Left: <span id="time">60</span>s</div>
-      <div>Score: <span id="score">0</span></div>
+      <div class="timer">⏱ Time: <span id="time">60</span>s</div>
+      <div class="score">🏆 Score: <span id="score">0</span></div>
     </div>
-    <p>Drag and drop the URLs into the correct sitemap hierarchy:</p>
-    <div class="maze">
-      <div class="url-list" id="urlList"></div>
-      <div class="sitemap" id="sitemap"></div>
-    </div>
-    <button class="btn" onclick="checkAnswers()">Check Answers</button>
+    <p>Drag and organize URLs into your custom sitemap structure.</p>
+    <div class="url-bank" id="urlBank"></div>
+    <div class="drop-area" id="dropArea"></div>
+    <button class="btn" onclick="checkAnswers()">Check Sitemap</button>
   </div>
-  <div id="popup" class="popup" style="display:none;"></div>
+  <div class="popup" id="popup" style="display:none;"></div>
 
   <script>
     const levels = [
-      // Add real level data here
-      [{label:'Home', url:'/home'}, {label:'About', url:'/about'}],
-      [{label:'Shop', url:'/shop'}, {label:'Cart', url:'/cart'}],
-      [{label:'Blog', url:'/blog'}, {label:'Contact', url:'/contact'}],
-      [{label:'Services', url:'/services'}, {label:'Support', url:'/support'}]
+      [
+        { label: "Homepage", url: "/" },
+        { label: "About Us", url: "/about" },
+        { label: "Services", url: "/services" },
+        { label: "Blog", url: "/blog" },
+        { label: "Contact", url: "/contact" }
+      ],
+      [...], [...], [...]
     ];
 
     let currentLevel = 0;
-    let timerInterval;
     let timeLeft = 60;
     let score = 0;
+    let timerInterval;
 
     function shuffle(array) {
       return array.sort(() => Math.random() - 0.5);
@@ -169,7 +149,7 @@
 
     function showPopup(message, next = false) {
       const popup = document.getElementById('popup');
-      popup.innerHTML = `<h2>${message}</h2>` + (next ? '<button onclick="nextLevel()">Next</button>' : '');
+      popup.innerHTML = `<h2>${message}</h2>` + (next ? '<button onclick="nextLevel()">Next Level</button>' : '');
       popup.style.display = 'block';
     }
 
@@ -181,46 +161,49 @@
       hidePopup();
       document.getElementById('level').innerText = currentLevel + 1;
       const urls = shuffle([...levels[currentLevel]]);
-      const urlList = document.getElementById('urlList');
-      const sitemap = document.getElementById('sitemap');
 
-      urlList.innerHTML = '';
-      sitemap.innerHTML = '';
+      const bank = document.getElementById('urlBank');
+      const drop = document.getElementById('dropArea');
+
+      bank.innerHTML = '';
+      drop.innerHTML = '';
 
       urls.forEach(u => {
         const item = document.createElement('div');
         item.className = 'url-item';
+        item.textContent = u.url;
         item.draggable = true;
         item.dataset.url = u.url;
-        item.innerText = u.url;
         item.addEventListener('dragstart', e => {
-          e.dataTransfer.setData('text/plain', item.dataset.url);
+          e.dataTransfer.setData('text/plain', u.url);
         });
-        urlList.appendChild(item);
+        bank.appendChild(item);
       });
 
       levels[currentLevel].forEach(u => {
         const zone = document.createElement('div');
         zone.className = 'drop-zone';
         zone.dataset.correct = u.url;
-        zone.innerText = u.label;
+        zone.textContent = u.label;
 
         zone.addEventListener('dragover', e => {
           e.preventDefault();
-          zone.style.background = '#dce3ff';
+          zone.style.background = '#f0f4c3';
         });
+
         zone.addEventListener('dragleave', () => {
           zone.style.background = '';
         });
+
         zone.addEventListener('drop', e => {
           e.preventDefault();
-          const url = e.dataTransfer.getData('text/plain');
-          zone.innerText = `${u.label}\n${url}`;
-          zone.dataset.answer = url;
+          const dropped = e.dataTransfer.getData('text/plain');
+          zone.textContent = `${u.label}\n${dropped}`;
+          zone.dataset.answer = dropped;
           zone.style.background = '';
         });
 
-        sitemap.appendChild(zone);
+        drop.appendChild(zone);
       });
 
       resetTimer();
@@ -229,10 +212,10 @@
     function resetTimer() {
       clearInterval(timerInterval);
       timeLeft = 60;
-      document.getElementById('time').innerText = timeLeft;
+      document.getElementById('time').textContent = timeLeft;
       timerInterval = setInterval(() => {
         timeLeft--;
-        document.getElementById('time').innerText = timeLeft;
+        document.getElementById('time').textContent = timeLeft;
         if (timeLeft <= 0) {
           clearInterval(timerInterval);
           checkAnswers();
@@ -242,33 +225,31 @@
 
     function checkAnswers() {
       clearInterval(timerInterval);
-      const zones = document.querySelectorAll('.drop-zone');
-      let allCorrect = true;
       let correctCount = 0;
+      const zones = document.querySelectorAll('.drop-zone');
 
       zones.forEach(zone => {
         const correct = zone.dataset.correct;
         const answer = zone.dataset.answer || '';
         if (correct === answer) {
           zone.classList.add('correct');
-          zone.classList.remove('incorrect');
           correctCount++;
         } else {
           zone.classList.add('incorrect');
-          zone.classList.remove('correct');
-          allCorrect = false;
         }
       });
 
-      score += correctCount * 10;
-      document.getElementById('score').innerText = score;
+      let points = correctCount * 10;
+      if (timeLeft > 45) points += 20;
+      score += points;
+      document.getElementById('score').textContent = score;
 
-      if (allCorrect && currentLevel < levels.length - 1) {
-        showPopup('🎉 Great job! Level passed!', true);
-      } else if (allCorrect) {
-        showPopup(`🏁 All levels completed! Final score: ${score} <br><a href="final.html">Go to Final Page</a>`);
+      if (correctCount === zones.length && currentLevel < levels.length - 1) {
+        showPopup(`Great! You earned ${points} points!`, true);
+      } else if (correctCount === zones.length) {
+        showPopup(`🎉 All done! Final Score: ${score}<br><a href='final.html'>Finish</a>`);
       } else {
-        showPopup('❌ Some answers were incorrect. Try again!');
+        showPopup(`You got ${correctCount}/${zones.length} correct. Try again!`);
       }
     }
 
