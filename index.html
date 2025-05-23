@@ -5,28 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sitemap Maze Game</title>
   <style>
+    :root {
+      --primary-color: #6C63FF;
+      --accent-color: #00C9A7;
+      --bg-color: #F4F7FF;
+      --text-color: #333;
+      --correct-color: #DFF5E1;
+      --incorrect-color: #FFD6D6;
+    }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
-      background: #eef2f7;
-      color: #333;
+      background: var(--bg-color);
+      color: var(--text-color);
       overflow-x: hidden;
     }
     header {
-      background: #3f51b5;
+      background: var(--primary-color);
       color: white;
       padding: 1rem;
       text-align: center;
-      font-size: 1.5rem;
+      font-size: 1.75rem;
     }
     .container {
       max-width: 960px;
       margin: 2rem auto;
-      padding: 1rem;
+      padding: 2rem;
       background: white;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      position: relative;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     }
     .game-info {
       display: flex;
@@ -35,57 +42,66 @@
       margin-bottom: 1rem;
     }
     .maze {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 1rem;
-      justify-content: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
     }
     .url-list, .sitemap {
+      flex: 1;
+      min-width: 300px;
       padding: 1rem;
-      border: 2px dashed #ccc;
-      border-radius: 8px;
-      background: #fafafa;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
     }
     .url-item {
-      padding: 0.5rem;
-      background: #e3f2fd;
-      border: 1px solid #64b5f6;
+      padding: 0.75rem 1rem;
+      background: var(--accent-color);
+      color: white;
+      border-radius: 6px;
       margin-bottom: 0.5rem;
-      border-radius: 4px;
       cursor: grab;
-      transition: transform 0.2s;
+      transition: transform 0.2s, box-shadow 0.2s;
     }
-    .url-item:active {
+    .url-item:hover {
       transform: scale(1.05);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
     .drop-zone {
-      min-height: 50px;
-      padding: 0.5rem;
-      border: 2px dashed #9e9e9e;
-      border-radius: 4px;
-      background: #fff;
+      min-height: 60px;
+      padding: 1rem;
+      border-radius: 10px;
+      background: #f0f0f0;
       transition: background 0.3s ease;
+      font-weight: 500;
+    }
+    .drop-zone:hover {
+      background: #e6e6ff;
     }
     .correct {
-      background: #c8e6c9 !important;
+      background: var(--correct-color) !important;
     }
     .incorrect {
-      background: #ffcdd2 !important;
+      background: var(--incorrect-color) !important;
     }
     .btn {
-      display: block;
-      margin: 1.5rem auto;
-      padding: 0.75rem 2rem;
-      font-size: 1rem;
-      background: #4caf50;
+      background: var(--primary-color);
       color: white;
+      padding: 0.75rem 2rem;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
+      font-size: 1rem;
       cursor: pointer;
+      transition: background 0.3s;
+      margin: 2rem auto 0;
+      display: block;
+    }
+    .btn:hover {
+      background: #554dff;
     }
     .timer {
       font-weight: bold;
-      color: #d32f2f;
+      color: #ff3b30;
     }
     .popup {
       position: fixed;
@@ -93,21 +109,26 @@
       left: 50%;
       transform: translate(-50%, -50%);
       background: white;
-      border: 2px solid #3f51b5;
-      border-radius: 8px;
+      border: 2px solid var(--primary-color);
+      border-radius: 12px;
       padding: 2rem;
       text-align: center;
-      z-index: 9999;
-      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      z-index: 1000;
+      box-shadow: 0 0 30px rgba(0,0,0,0.2);
+      animation: fadeIn 0.4s ease;
     }
     .popup button {
       margin-top: 1rem;
-      background: #3f51b5;
+      background: var(--accent-color);
       color: white;
       border: none;
       padding: 0.5rem 1rem;
-      border-radius: 5px;
+      border-radius: 8px;
       cursor: pointer;
+    }
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translate(-50%, -60%);}
+      to {opacity: 1; transform: translate(-50%, -50%);}
     }
   </style>
 </head>
@@ -115,10 +136,11 @@
   <header>Sitemap Maze Game</header>
   <div class="container">
     <div class="game-info">
-      <div>Level: <span id="level">1</span>/5</div>
+      <div>Level: <span id="level">1</span>/4</div>
       <div class="timer">Time Left: <span id="time">60</span>s</div>
+      <div>Score: <span id="score">0</span></div>
     </div>
-    <p>Drag the URLs into the correct sitemap hierarchy:</p>
+    <p>Drag and drop the URLs into the correct sitemap hierarchy:</p>
     <div class="maze">
       <div class="url-list" id="urlList"></div>
       <div class="sitemap" id="sitemap"></div>
@@ -129,12 +151,17 @@
 
   <script>
     const levels = [
-      [...], [...], [...], [...], [...]
-    ]; // keep level data as is
+      // Add real level data here
+      [{label:'Home', url:'/home'}, {label:'About', url:'/about'}],
+      [{label:'Shop', url:'/shop'}, {label:'Cart', url:'/cart'}],
+      [{label:'Blog', url:'/blog'}, {label:'Contact', url:'/contact'}],
+      [{label:'Services', url:'/services'}, {label:'Support', url:'/support'}]
+    ];
 
     let currentLevel = 0;
     let timerInterval;
     let timeLeft = 60;
+    let score = 0;
 
     function shuffle(array) {
       return array.sort(() => Math.random() - 0.5);
@@ -180,7 +207,7 @@
 
         zone.addEventListener('dragover', e => {
           e.preventDefault();
-          zone.style.background = '#f1f8e9';
+          zone.style.background = '#dce3ff';
         });
         zone.addEventListener('dragleave', () => {
           zone.style.background = '';
@@ -217,6 +244,7 @@
       clearInterval(timerInterval);
       const zones = document.querySelectorAll('.drop-zone');
       let allCorrect = true;
+      let correctCount = 0;
 
       zones.forEach(zone => {
         const correct = zone.dataset.correct;
@@ -224,6 +252,7 @@
         if (correct === answer) {
           zone.classList.add('correct');
           zone.classList.remove('incorrect');
+          correctCount++;
         } else {
           zone.classList.add('incorrect');
           zone.classList.remove('correct');
@@ -231,12 +260,15 @@
         }
       });
 
+      score += correctCount * 10;
+      document.getElementById('score').innerText = score;
+
       if (allCorrect && currentLevel < levels.length - 1) {
-        showPopup('Great job! Level passed!', true);
+        showPopup('🎉 Great job! Level passed!', true);
       } else if (allCorrect) {
-        showPopup('🎉 Congratulations! You completed all levels. <br><a href="final.html">Go to Final Page</a>');
+        showPopup(`🏁 All levels completed! Final score: ${score} <br><a href="final.html">Go to Final Page</a>`);
       } else {
-        showPopup('Some answers were incorrect. Try again!');
+        showPopup('❌ Some answers were incorrect. Try again!');
       }
     }
 
