@@ -170,6 +170,7 @@
     let timeLeft = 60;
     let score = 0;
     let timerInterval;
+    let hasChecked = false;
 
     function shuffle(array) {
       return array.sort(() => Math.random() - 0.5);
@@ -189,6 +190,7 @@
 
     function startLevel() {
       hidePopup();
+      hasChecked = false;
       document.getElementById('level').innerText = currentLevel + 1;
       const urls = shuffle([...levels[currentLevel]]);
 
@@ -254,6 +256,8 @@
     }
 
     function checkAnswers() {
+      if (hasChecked) return;
+      hasChecked = true;
       clearInterval(timerInterval);
       let correctCount = 0;
       const zones = document.querySelectorAll('.drop-zone');
@@ -274,12 +278,10 @@
       score += points;
       document.getElementById('score').textContent = score;
 
-      if (correctCount === zones.length && currentLevel < levels.length - 1) {
-        showPopup(`Great! You earned ${points} points!`, true);
-      } else if (correctCount === zones.length) {
-        showPopup(`🎉 All done! Final Score: ${score}`, false, true);
+      if (currentLevel < levels.length - 1) {
+        showPopup(`Level complete! You got ${correctCount}/${zones.length} correct. You earned ${points} points.`, true);
       } else {
-        showPopup(`You got ${correctCount}/${zones.length} correct. Try again!`);
+        showPopup(`🎉 All done! Final Score: ${score}`, false, true);
       }
     }
 
